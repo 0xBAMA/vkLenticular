@@ -10,22 +10,6 @@
 #include <vk_pipelines.h>
 #include <vk_loader.h>
 
-#include "lightManager.h"
-
-struct point {
-	glm::vec2 position{ 0.0f };
-	glm::vec2 velocity{ 0.0f };
-
-	glm::mat2 C{ 0.0f };
-	glm::mat2 Fs{ 1.0f };
-
-	float mass { 1.0f };
-	float v0 { 1.0f };
-
-	int particleType{ 0 };
-	float pad;
-};
-
 struct DeletionQueue {
 	std::deque< std::function< void() > > deletors;
 
@@ -71,37 +55,11 @@ struct GlobalData {
 
 	float brightnessScalar{ 1.0f };
 	float resolutionScalar{ 1.0f };
-
-	float gravityScalar{ 0.0f };
-	float fixedPointScalar{ 1000000.0f };
-
-	uint32_t numPoints;
-	uint32_t numPointsFluid;
-
-	float dt{ 0.01f };
-
-	// Lamé parameters for stress-strain relationship
-	// float elasticLambda = 10.0f;
-	// float elasticMu = 20.0f;
-
-	float elasticLambda = 2.0f;
-	float elasticMu = 10.0f;
-
-	// new fluid parameters for Tait compressible fluid equation of state
-	float restDensity = 4.0f;
-	float dynamicViscosity = 0.1f;
-	float eosStiffness = 10.0f;
-	float eosPower = 4.0f;
-
-	float mouseSize { 20.0f };
-	float mouseForceScalar { 0.75f };
 };
 
 // smallest scope CPU->GPU passing of information
 struct PushConstants {
 	uint32_t wangSeed;
-
-	float pointScale{ 1.0f };
 };
 
 constexpr unsigned int FRAME_OVERLAP = 2;
@@ -151,40 +109,14 @@ public:
 	ComputeEffect BufferPresent;
 	AllocatedImage Accumulator;
 
-	// data storage
-	float gridScalar = 1.0f;
-	uint32_t gridWidth = 1500;
-	uint32_t gridHeight = 400;
-	uint32_t numPoints{ gridWidth * gridHeight };
-	uint32_t numPointsFluid{ gridWidth * gridHeight / 2 };
-	AllocatedBuffer pointBuffer;
+	// the buffer used to store the lenticular LUT
+	AllocatedImage LenticularLUT;
 
-	// and images... screen res
-	VkExtent3D SimResolution;
-	AllocatedImage velocityXAtomic;
-	AllocatedImage velocityYAtomic;
-	AllocatedImage massAtomic;
-	AllocatedImage resolvedAtomics;
+	// resolving the lenticular LUT
+	ComputeEffect LenticularResolve;
 
-	// minimap parameters
-	float scalar = 5.0f;
-	int windowWidth = 800;
-	int windowHeight = 400;
-	int xOffset = 4520;
-	int yOffset = 2590;
-
-	// for simulation
-	int iterations = 1;
-	ComputeEffect EstimateVolume;
-	ComputeEffect PointToGrid;
-	ComputeEffect PointToGridFluidPass1;
-	ComputeEffect PointToGridFluidPass2;
-	ComputeEffect UpdateGrid;
-	ComputeEffect GridToPoint;
-	void BufferClears( VkCommandBuffer cmd );
-
-	// for rendering
-	ComputeEffect PointRaster;
+	// resolving the output image
+	ComputeEffect OutputResolve;
 
 	// engine triggers
 	bool resizeRequest { false };
@@ -280,7 +212,6 @@ private:
 	void initComputePasses ();
 	void initImgui ();
 	void initResources ();
-	void initPoints ();
 
 	// main loop helpers
 	void drawImgui ( VkCommandBuffer cmd, VkImageView targetImageView );

@@ -3,8 +3,6 @@
 layout( push_constant ) uniform constants {
 // RNG seeding from the CPU
 	uint wangSeed;
-
-	float pointScale;
 } PushConstants;
 
 //=========================================================
@@ -21,28 +19,7 @@ layout( set = 0, binding = 0 ) uniform globalData {
 	float brightnessScalar;
 	float resolutionScalar;
 
-	float gravityScalar;
-	float fixedPointScalar;
-
-	uint numPoints;
-	uint numPointsFluid;
-
-	float dT;
-
-	// Lamé parameters for stress-strain relationship
-	float elasticLambda;
-	float elasticMu;
-
-	// new fluid parameters for Tait compressible fluid equation of state
-	float restDensity;
-	float dynamicViscosity;
-	float eosStiffness;
-	float eosPower;
-
-	float mouseSize;
-	float mouseForceScalar;
-
-	// nsight layout: vec2u; vec2; int; int; float; float; ...
+	// nsight layout: vec2u; vec2u; vec3; int; int; float; float;
 } GlobalData;
 //=========================================================
 
