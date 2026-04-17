@@ -560,6 +560,11 @@ void PrometheusInstance::initResources () {
 		SetDebugName( VK_OBJECT_TYPE_IMAGE, ( uint64_t ) Accumulator.image, "Accumulator" );
 	}
 
+	{ // create the texture to hold the LUT
+		LenticularLUT = createImage( LenticularLUTResolution, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_STORAGE_BIT );
+		SetDebugName( VK_OBJECT_TYPE_IMAGE, ( uint64_t ) LenticularLUT.image, "Lenticular LUT" );
+	}
+
 	// make sure to clean up at the end
 	mainDeletionQueue.push_function([ & ] () {
 		// destroying buffers
@@ -567,6 +572,7 @@ void PrometheusInstance::initResources () {
 
 		// destroying images
 		destroyImage( Accumulator );
+		destroyImage( LenticularLUT );
 	});
 }
 

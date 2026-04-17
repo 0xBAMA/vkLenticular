@@ -110,6 +110,7 @@ public:
 	AllocatedImage Accumulator;
 
 	// the buffer used to store the lenticular LUT
+	VkExtent3D LenticularLUTResolution{ 4096, 4096, 1 };
 	AllocatedImage LenticularLUT;
 
 	// resolving the lenticular LUT
