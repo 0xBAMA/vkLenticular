@@ -305,12 +305,12 @@ void PrometheusInstance::MainLoop () {
 			ImGui::NewFrame();
 
 			// some imgui UI to test
-			ImGui::ShowDemoWindow();
+			// ImGui::ShowDemoWindow();
 
-			// if ( ImGui::Begin( "Controls" ) ) {
+			if ( ImGui::Begin( "Controls" ) ) {
 
-			// }
-			// ImGui::End();
+			}
+			ImGui::End();
 
 			// make imgui calculate internal draw structures
 			ImGui::Render();
