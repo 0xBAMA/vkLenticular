@@ -19,7 +19,19 @@ layout( set = 0, binding = 0 ) uniform globalData {
 	float brightnessScalar;
 	float resolutionScalar;
 
-	// nsight layout: vec2u; vec2u; vec3; int; int; float; float;
+	// for the view rays
+	vec3 viewBasisX;
+	vec3 viewBasisY;
+	vec3 viewBasisZ;
+
+	// for rotating the plane within the box
+	vec3 planeBasisX;
+	vec3 planeBasisY;
+	vec3 planeBasisZ;
+
+	float zoomFactor;
+
+	// nsight layout: vec2u; vec2u; vec3; int; int; float; float; vec3; vec3; vec3; vec3; vec3; vec3; float;
 } GlobalData;
 //=========================================================
 

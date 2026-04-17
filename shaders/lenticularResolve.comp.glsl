@@ -34,7 +34,7 @@ void main () {
 	ivec2 pixelIdx = idx / 8;
 	vec3 rayOrigin = vec3(
 		remap( float( pixelIdx.x + 0.5f ), 0.0f, 512.0f, -1.0f, 1.0f ),
-		remap( float( pixelIdx.x + 0.5f ), 0.0f, 512.0f, -1.0f, 1.0f ),
+		remap( float( pixelIdx.y + 0.5f ), 0.0f, 512.0f, -1.0f, 1.0f ),
 		0.0f
 	);
 
@@ -47,12 +47,13 @@ void main () {
 	);
 	vec3 rayDirection = Rotate3D( startAngle.x, vec3( 0.0f, 1.0f, 0.0f ) ) * Rotate3D( startAngle.y, vec3( 1.0f, 0.0f, 0.0f ) ) * vec3( 0.0f, 0.0f, -1.0f );
 
-	vec3 sphereCenter = vec3( 0.0f, 0.0f, -2.0f );
-	vec2 roots = RaySphereIntersect( rayOrigin, rayDirection, sphereCenter, 1.0f );
+	vec3 sphereCenter = vec3( 0.0f, 0.0f, -3.0f );
+	vec2 roots = RaySphereIntersect( rayOrigin, rayDirection, sphereCenter, 2.0f );
 	vec3 color = vec3( 0.0f );
 	if ( roots != vec2( -1.0f ) ) {
 		vec3 p = rayOrigin + rayDirection * roots.x;
-		color = abs( p - sphereCenter );
+		// color = abs( p - sphereCenter );
+		color = normalize( p - sphereCenter );
 	}
 
 	// we need to store back the result, into the lenticular LUT
