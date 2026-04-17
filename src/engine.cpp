@@ -201,6 +201,7 @@ void PrometheusInstance::Draw () {
 	VK_CHECK( vkBeginCommandBuffer( cmd, &cmdBeginInfo ) );
 
 	// put the core images into a general format
+	vkutil::transition_image( cmd, LenticularLUT.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL );
 	vkutil::transition_image( cmd, Accumulator.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL );
 	vkutil::transition_image( cmd, drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL );
 

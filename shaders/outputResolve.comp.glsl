@@ -25,5 +25,5 @@ void main () {
 	// writing a result back to the accumulator...
 		// handling image reset, here - cancel history and only write this frame's data
 
-	imageStore( accumulator, idx, vec4( color, 1.0f ) );
+	imageStore( accumulator, idx, imageLoad( lenticularLUT, idx ) );
 }
