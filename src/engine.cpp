@@ -29,9 +29,6 @@ using namespace std::chrono_literals;
 
 #include <third_party/yaml-cpp/include/yaml-cpp/yaml.h>
 
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/packing.hpp>
-
 #include <third_party/stb/stb_image_write.h>
 
 inline std::string timeDateString () {
@@ -188,7 +185,7 @@ void PrometheusInstance::Draw () {
 	// update the UBO contents
 	static float mouseX, mouseY;
 	auto ret = SDL_GetMouseState( &mouseX, &mouseY );
-	globalData.mouseLoc = glm::vec3( mouseX, mouseY, ( ret & SDL_BUTTON_LEFT ) ? 1.0f : 0.0f );
+	globalData.mouseLoc = glm::vec3( mouseX, mouseY, ( ( ret & SDL_BUTTON_LEFT ) && !ImGui::GetIO().WantCaptureMouse ) ? 1.0f : 0.0f );
 	globalData.presentBufferResolution = glm::uvec2( drawExtent.width, drawExtent.height );
 	globalData.frameNumber = frameNumber;
 	globalData.resolutionScalar = renderScale;
@@ -294,6 +291,56 @@ void PrometheusInstance::MainLoop () {
 			if ( kb[ SDL_SCANCODE_T ] && shift ) {
 				screenshot();
 			}
+
+			static auto RotateX = [ & ] ( float amnt ) {
+				globalData.viewBasisX = glm::rotate( globalData.viewBasisX, amnt, glm::vec3( 1.0f, 0.0f, 0.0f ) );
+				globalData.viewBasisY = glm::rotate( globalData.viewBasisY, amnt, glm::vec3( 1.0f, 0.0f, 0.0f ) );
+				globalData.viewBasisZ = glm::rotate( globalData.viewBasisZ, amnt, glm::vec3( 1.0f, 0.0f, 0.0f ) );
+			};
+			static auto RotateY = [ & ] ( float amnt ) {
+				globalData.viewBasisX = glm::rotate( globalData.viewBasisX, amnt, glm::vec3( 0.0f, 1.0f, 0.0f ) );
+				globalData.viewBasisY = glm::rotate( globalData.viewBasisY, amnt, glm::vec3( 0.0f, 1.0f, 0.0f ) );
+				globalData.viewBasisZ = glm::rotate( globalData.viewBasisZ, amnt, glm::vec3( 0.0f, 1.0f, 0.0f ) );
+			};
+			static auto RotateZ = [ & ] ( float amnt ) {
+				globalData.viewBasisX = glm::rotate( globalData.viewBasisX, amnt, glm::vec3( 0.0f, 0.0f, 1.0f ) );
+				globalData.viewBasisY = glm::rotate( globalData.viewBasisY, amnt, glm::vec3( 0.0f, 0.0f, 1.0f ) );
+				globalData.viewBasisZ = glm::rotate( globalData.viewBasisZ, amnt, glm::vec3( 0.0f, 0.0f, 1.0f ) );
+			};
+
+			if ( !ImGui::GetIO().WantCaptureMouse ) {
+				constexpr float scaleFactor = 0.965f;
+				if ( e.type == SDL_EVENT_MOUSE_WHEEL ) {
+					if ( e.wheel.y > 0 ) {
+						globalData.zoomFactor *= scaleFactor;
+					} else if ( e.wheel.y < 0 ) {
+						globalData.zoomFactor /= scaleFactor;
+					}
+				}
+				// ImVec2 valueRaw = ImGui::GetMouseDragDelta( 0, 0.0f );
+				// if ( ( valueRaw.x != 0 || valueRaw.y != 0 ) ) {
+					// render.renderOffset.x -= valueRaw.x;
+					// render.renderOffset.y += valueRaw.y;
+					// render.framesSinceLastInput = 0;
+					// ImGui::ResetMouseDragDelta( 0 );
+				// }
+				ImVec2 valueRaw = ImGui::GetMouseDragDelta( 1, 0.0f );
+				if ( ( valueRaw.x != 0 || valueRaw.y != 0 ) ) {
+					RotateY( -valueRaw.x * 0.03f );
+					RotateX( -valueRaw.y * 0.03f );
+					ImGui::ResetMouseDragDelta( 1 );
+				}
+			}
+
+			// updating the basis vectors...
+			constexpr float bigStep = 0.120f;
+			constexpr float lilStep = 0.008f;
+			if ( kb[ SDL_SCANCODE_W ] || kb[ SDL_SCANCODE_UP ] ) {			RotateX( shift ?  bigStep :  lilStep ); }
+			if ( kb[ SDL_SCANCODE_S ] || kb[ SDL_SCANCODE_DOWN ] ) {		RotateX( shift ? -bigStep : -lilStep ); }
+			if ( kb[ SDL_SCANCODE_A ] || kb[ SDL_SCANCODE_LEFT ] ) {		RotateY( shift ?  bigStep :  lilStep ); }
+			if ( kb[ SDL_SCANCODE_D ] || kb[ SDL_SCANCODE_RIGHT ] ) {		RotateY( shift ? -bigStep : -lilStep ); }
+			if ( kb[ SDL_SCANCODE_PAGEUP ] || kb[ SDL_SCANCODE_Q ] ) {		RotateZ( shift ? -bigStep : -lilStep ); }
+			if ( kb[ SDL_SCANCODE_PAGEDOWN ] || kb[ SDL_SCANCODE_E ] ) {	RotateZ( shift ?  bigStep :  lilStep ); }
 		}
 
 		// handling minimized application

@@ -22,6 +22,8 @@
 #include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/vec4.hpp>
+#include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtc/packing.hpp>
 
 // we will add our main reusable types here
 struct AllocatedImage {

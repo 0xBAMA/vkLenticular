@@ -55,6 +55,19 @@ struct GlobalData {
 
 	float brightnessScalar{ 1.0f };
 	float resolutionScalar{ 1.0f };
+
+	// for the view rays
+	glm::vec3 viewBasisX{ 1.0f, 0.0f, 0.0f };
+	glm::vec3 viewBasisY{ 0.0f, 1.0f, 0.0f };
+	glm::vec3 viewBasisZ{ 0.0f, 0.0f, 1.0f };
+
+	// for rotating the plane within the box
+	glm::vec3 planeBasisX{ 1.0f, 0.0f, 0.0f };
+	glm::vec3 planeBasisY{ 0.0f, 1.0f, 0.0f };
+	glm::vec3 planeBasisZ{ 0.0f, 0.0f, 1.0f };
+
+	// zooming in and out
+	float zoomFactor{ 1.0f };
 };
 
 // smallest scope CPU->GPU passing of information
