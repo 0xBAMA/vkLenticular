@@ -5,7 +5,7 @@
 
 layout ( local_size_x = 16, local_size_y = 16 ) in;
 
-layout ( rgba32f, set = 0, binding = 1 ) uniform image2D lenticularLUT;
+layout ( rgba8, set = 0, binding = 1 ) uniform image2D lenticularLUT;
 
 #include "common.h"
 
@@ -51,7 +51,7 @@ void main () {
 	vec3 color = vec3( 1.0f );
 	if ( roots != vec2( -1.0f ) ) {
 		vec3 p = rayOrigin + rayDirection * roots.x;
-		color = normalize( p - sphereCenter );
+		color = normalize( p - sphereCenter ) * step( mod( p.z, 0.2f ), 0.1f );
 	}
 
 	// we need to store back the result, into the lenticular LUT
