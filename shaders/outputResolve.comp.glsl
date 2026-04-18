@@ -70,10 +70,43 @@ void main () {
 	vec4 color = vec4( 0.0f );
 	if ( Intersect( rayOrigin, rayDirection ) ) {
 		// if the ray hits, we're pathtracing
-		color.xyz = vec3( 1.0f / tMin );
 
+		vec3 pInitial = rayOrigin + rayDirection * tMin;
+		rayOrigin = pInitial + rayDirection * 0.0001f;
 
+		vec3 normal = boxNormal( pInitial );
+		rayDirection = refract( rayDirection, normal, 1.5f );
 
+		float transmission = 1.0f;
+		for ( int i = 0; i < 4; i++ ) {
+
+			// scene intersection - in the box, rays can't escape...
+				// Hit one of three things first:
+					// the mirror box
+					// the lenticular panel (light side)
+					// the lenticular panel (dark side)
+
+			// if you hit the panel - you have a color, or you hit the dark side
+
+				// if you hit the dark side, the ray dies, we take color as 0
+
+				// else get the value out of the lenticular LUT
+					// pixel select
+						// plane X, Y -> spatial mapping
+					// subpixel select
+						// plane X, Y, ray direction -> directional mapping
+
+				// color is transmission * sampled color
+
+			// else need to keep bouncing
+
+				// attenuate transmission by wall albedo
+
+				// get the normal at the hit point - this happens *at* the hit point, before epsilon bump is considered
+
+				// epsilon bump + rayOrigin update
+
+		}
 	}
 
 	imageStore( accumulator, idx, color );
