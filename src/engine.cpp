@@ -293,23 +293,29 @@ void PrometheusInstance::MainLoop () {
 			}
 
 			static auto RotateX = [ & ] ( float amnt ) {
-				globalData.viewBasisX = glm::rotate( globalData.viewBasisX, amnt, glm::vec3( 1.0f, 0.0f, 0.0f ) );
-				globalData.viewBasisY = glm::rotate( globalData.viewBasisY, amnt, glm::vec3( 1.0f, 0.0f, 0.0f ) );
-				globalData.viewBasisZ = glm::rotate( globalData.viewBasisZ, amnt, glm::vec3( 1.0f, 0.0f, 0.0f ) );
+				glm::vec3 axis = globalData.viewBasisX;
+				globalData.viewBasisX = glm::rotate( globalData.viewBasisX, amnt, axis );
+				globalData.viewBasisY = glm::rotate( globalData.viewBasisY, amnt, axis );
+				globalData.viewBasisZ = glm::rotate( globalData.viewBasisZ, amnt, axis );
+				globalData.reset = 1;
 			};
 			static auto RotateY = [ & ] ( float amnt ) {
-				globalData.viewBasisX = glm::rotate( globalData.viewBasisX, amnt, glm::vec3( 0.0f, 1.0f, 0.0f ) );
-				globalData.viewBasisY = glm::rotate( globalData.viewBasisY, amnt, glm::vec3( 0.0f, 1.0f, 0.0f ) );
-				globalData.viewBasisZ = glm::rotate( globalData.viewBasisZ, amnt, glm::vec3( 0.0f, 1.0f, 0.0f ) );
+				glm::vec3 axis = globalData.viewBasisY;
+				globalData.viewBasisX = glm::rotate( globalData.viewBasisX, amnt, axis );
+				globalData.viewBasisY = glm::rotate( globalData.viewBasisY, amnt, axis );
+				globalData.viewBasisZ = glm::rotate( globalData.viewBasisZ, amnt, axis );
+				globalData.reset = 1;
 			};
 			static auto RotateZ = [ & ] ( float amnt ) {
-				globalData.viewBasisX = glm::rotate( globalData.viewBasisX, amnt, glm::vec3( 0.0f, 0.0f, 1.0f ) );
-				globalData.viewBasisY = glm::rotate( globalData.viewBasisY, amnt, glm::vec3( 0.0f, 0.0f, 1.0f ) );
-				globalData.viewBasisZ = glm::rotate( globalData.viewBasisZ, amnt, glm::vec3( 0.0f, 0.0f, 1.0f ) );
+				glm::vec3 axis = globalData.viewBasisZ;
+				globalData.viewBasisX = glm::rotate( globalData.viewBasisX, amnt, axis );
+				globalData.viewBasisY = glm::rotate( globalData.viewBasisY, amnt, axis );
+				globalData.viewBasisZ = glm::rotate( globalData.viewBasisZ, amnt, axis );
+				globalData.reset = 1;
 			};
 
+			constexpr float scaleFactor = 0.965f;
 			if ( !ImGui::GetIO().WantCaptureMouse ) {
-				constexpr float scaleFactor = 0.965f;
 				if ( e.type == SDL_EVENT_MOUSE_WHEEL ) {
 					if ( e.wheel.y > 0 ) {
 						globalData.zoomFactor *= scaleFactor;
@@ -337,10 +343,13 @@ void PrometheusInstance::MainLoop () {
 			constexpr float lilStep = 0.008f;
 			if ( kb[ SDL_SCANCODE_W ] || kb[ SDL_SCANCODE_UP ] ) {			RotateX( shift ?  bigStep :  lilStep ); }
 			if ( kb[ SDL_SCANCODE_S ] || kb[ SDL_SCANCODE_DOWN ] ) {		RotateX( shift ? -bigStep : -lilStep ); }
-			if ( kb[ SDL_SCANCODE_A ] || kb[ SDL_SCANCODE_LEFT ] ) {		RotateY( shift ?  bigStep :  lilStep ); }
-			if ( kb[ SDL_SCANCODE_D ] || kb[ SDL_SCANCODE_RIGHT ] ) {		RotateY( shift ? -bigStep : -lilStep ); }
+			if ( kb[ SDL_SCANCODE_A ] || kb[ SDL_SCANCODE_LEFT ] ) {		RotateY( shift ? -bigStep : -lilStep ); }
+			if ( kb[ SDL_SCANCODE_D ] || kb[ SDL_SCANCODE_RIGHT ] ) {		RotateY( shift ?  bigStep :  lilStep ); }
 			if ( kb[ SDL_SCANCODE_PAGEUP ] || kb[ SDL_SCANCODE_Q ] ) {		RotateZ( shift ? -bigStep : -lilStep ); }
 			if ( kb[ SDL_SCANCODE_PAGEDOWN ] || kb[ SDL_SCANCODE_E ] ) {	RotateZ( shift ?  bigStep :  lilStep ); }
+
+			if ( kb[ SDL_SCANCODE_MINUS ] ) globalData.zoomFactor *= scaleFactor, globalData.reset = 1;;
+			if ( kb[ SDL_SCANCODE_EQUALS ] ) globalData.zoomFactor /= scaleFactor, globalData.reset = 1;;
 		}
 
 		// handling minimized application
