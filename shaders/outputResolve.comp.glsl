@@ -42,6 +42,21 @@ bool Intersect ( const vec3 rO, vec3 rD ) {
 	return ( ( tMin < maxDistance ) && ( tMax > minDistance ) );
 }
 
+vec3 boxNormal ( vec3 p ) {
+	// sort of an approximation... take the normal of the nearest face
+	const float ome = 1.0f - 0.00001f; // one minus epsilon
+	if ( abs( p.x ) > ome ) {
+		return vec3( 1.0f, 0.0f, 0.0f ) * sign( p.x );
+	} else if ( abs( p.y ) > ome ) {
+		return vec3( 0.0f, 1.0f, 0.0f ) * sign( p.y );
+	} else if ( abs( p.z ) > ome ) {
+		return vec3( 0.0f, 0.0f, 1.0f ) * sign( p.z );
+	} else {
+		// shouldn't hit this
+		return vec3( 1.0f );
+	}
+}
+
 void main () {
 	ivec2 idx = ivec2(gl_GlobalInvocationID.xy);
 
