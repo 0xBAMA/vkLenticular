@@ -343,22 +343,17 @@ void PrometheusInstance::MainLoop () {
 				if ( e.type == SDL_EVENT_MOUSE_WHEEL ) {
 					if ( e.wheel.y > 0 ) {
 						globalData.zoomFactor *= scaleFactor;
+						globalData.reset = 1;
 					} else if ( e.wheel.y < 0 ) {
 						globalData.zoomFactor /= scaleFactor;
+						globalData.reset = 1;
 					}
 				}
-				// ImVec2 valueRaw = ImGui::GetMouseDragDelta( 0, 0.0f );
-				// if ( ( valueRaw.x != 0 || valueRaw.y != 0 ) ) {
-					// render.renderOffset.x -= valueRaw.x;
-					// render.renderOffset.y += valueRaw.y;
-					// render.framesSinceLastInput = 0;
-					// ImGui::ResetMouseDragDelta( 0 );
-				// }
-				ImVec2 valueRaw = ImGui::GetMouseDragDelta( 1, 0.0f );
+				ImVec2 valueRaw = ImGui::GetMouseDragDelta( 0, 0.0f );
 				if ( ( valueRaw.x != 0 || valueRaw.y != 0 ) ) {
-					RotateY( -valueRaw.x * 0.03f );
-					RotateX( -valueRaw.y * 0.03f );
-					ImGui::ResetMouseDragDelta( 1 );
+					RotateY( valueRaw.x * 0.03f );
+					RotateX( valueRaw.y * 0.03f );
+					ImGui::ResetMouseDragDelta( 0 );
 				}
 			}
 
@@ -372,8 +367,8 @@ void PrometheusInstance::MainLoop () {
 			if ( kb[ SDL_SCANCODE_PAGEUP ] || kb[ SDL_SCANCODE_Q ] ) {		RotateZ( shift ? -bigStep : -lilStep ); }
 			if ( kb[ SDL_SCANCODE_PAGEDOWN ] || kb[ SDL_SCANCODE_E ] ) {	RotateZ( shift ?  bigStep :  lilStep ); }
 
-			if ( kb[ SDL_SCANCODE_MINUS ] ) globalData.zoomFactor *= scaleFactor, globalData.reset = 1;;
-			if ( kb[ SDL_SCANCODE_EQUALS ] ) globalData.zoomFactor /= scaleFactor, globalData.reset = 1;;
+			if ( kb[ SDL_SCANCODE_MINUS ] ) globalData.zoomFactor *= scaleFactor, globalData.reset = 1;
+			if ( kb[ SDL_SCANCODE_EQUALS ] ) globalData.zoomFactor /= scaleFactor, globalData.reset = 1;
 		}
 
 		// handling minimized application

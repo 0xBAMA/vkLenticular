@@ -67,7 +67,7 @@ struct GlobalData {
 	glm::vec3 planeBasisZ{ 0.0f, 0.0f, 1.0f };
 
 	// zooming in and out
-	float zoomFactor{ 1.0f };
+	float zoomFactor{ 3.0f };
 };
 
 // smallest scope CPU->GPU passing of information
