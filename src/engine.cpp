@@ -444,6 +444,7 @@ void PrometheusInstance::initVulkan () {
 	VkPhysicalDeviceVulkan12Features features12{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
 	features12.bufferDeviceAddress = true;
 	features12.descriptorIndexing = true;
+	features12.scalarBlockLayout = true;
 
 	//use vkbootstrap to select a gpu.
 	//We want a gpu that can write to the SDL surface and supports vulkan 1.3 with the correct features
@@ -719,7 +720,7 @@ void PrometheusInstance::initComputePasses () {
 	}
 
 	{ // shader to resolve the output image
-			{ // descriptor layout
+		{ // descriptor layout
 			DescriptorLayoutBuilder builder;
 			builder.add_binding( 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ); // global config UBO
 			builder.add_binding( 1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE ); // LUT texture

@@ -5,10 +5,12 @@ layout( push_constant ) uniform constants {
 	uint wangSeed;
 } PushConstants;
 
+#extension GL_EXT_scalar_block_layout : require
+
 //=========================================================
 // Global config etc data in a UBO
-layout( set = 0, binding = 0 ) uniform globalData {
-	// buffer resolutions:
+layout( set = 0, binding = 0, scalar ) uniform globalData {
+	// buffer resolutions
 	uvec2 presentBufferResolution;
 	uvec2 accumulatorResolution;
 	vec3 mouseLoc;
