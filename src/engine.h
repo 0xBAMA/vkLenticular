@@ -68,6 +68,11 @@ struct GlobalData {
 
 	// zooming in and out
 	float zoomFactor{ 3.0f };
+
+	int gridBaseDim = 64;
+	int gridDivisions = 64;
+
+	float angleScale = 0.25f;
 };
 
 // smallest scope CPU->GPU passing of information
@@ -123,7 +128,7 @@ public:
 	AllocatedImage Accumulator;
 
 	// the buffer used to store the lenticular LUT
-	VkExtent3D LenticularLUTResolution{ 4096, 4096, 1 };
+	VkExtent3D LenticularLUTResolution;
 	AllocatedImage LenticularLUT;
 
 	// resolving the lenticular LUT

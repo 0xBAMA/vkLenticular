@@ -31,19 +31,18 @@ void main () {
 	ivec2 idx = ivec2( gl_GlobalInvocationID.xy );
 
 	// we need to figure out what pixel this invocation corresponds to -> informs ray origin
-	ivec2 pixelIdx = idx / 8;
+	ivec2 pixelIdx = idx / GlobalData.gridDivisions;
 	vec3 rayOrigin = vec3(
-		remap( float( pixelIdx.x + 0.5f ), 0.0f, 512.0f, -1.0f, 1.0f ),
-		remap( float( pixelIdx.y + 0.5f ), 0.0f, 512.0f, -1.0f, 1.0f ),
+		remap( float( pixelIdx.x + 0.5f ), 0.0f, GlobalData.gridBaseDim, -1.0f, 1.0f ),
+		remap( float( pixelIdx.y + 0.5f ), 0.0f, GlobalData.gridBaseDim, -1.0f, 1.0f ),
 		0.0f
 	);
 
-
 	// we need to figure out what angle this invocation corresponds to -> informs ray direction
-	ivec2 subpixelIdx = idx % 8;
+	ivec2 subpixelIdx = idx % GlobalData.gridDivisions;
 	vec2 startAngle = vec2( // this is used to construct the vector, via rotations from a vector pointing downwards...
-		remap( float( subpixelIdx.x ), 0.0f, 7.0f, -piHalf, piHalf ),
-		remap( float( subpixelIdx.y ), 0.0f, 7.0f, -piHalf, piHalf )
+		remap( float( subpixelIdx.x ), 0.0f, GlobalData.gridDivisions, piHalf * GlobalData.angleScale, -piHalf * GlobalData.angleScale ),
+		remap( float( subpixelIdx.y ), 0.0f, GlobalData.gridDivisions, piHalf * GlobalData.angleScale, -piHalf * GlobalData.angleScale )
 	);
 	vec3 rayDirection = Rotate3D( startAngle.x, vec3( 0.0f, 1.0f, 0.0f ) ) * Rotate3D( startAngle.y, vec3( 1.0f, 0.0f, 0.0f ) ) * vec3( 0.0f, 0.0f, -1.0f );
 

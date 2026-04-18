@@ -33,7 +33,12 @@ layout( set = 0, binding = 0, scalar ) uniform globalData {
 
 	float zoomFactor;
 
-	// nsight layout: vec2u; vec2u; vec3; int; int; float; float; vec3; vec3; vec3; vec3; vec3; vec3; float;
+	int gridBaseDim;
+	int gridDivisions;
+
+	float angleScale;
+
+	// nsight layout: vec2u; vec2u; vec3; int; int; float; float; vec3; vec3; vec3; vec3; vec3; vec3; float; int; int; float;
 } GlobalData;
 //=========================================================
 

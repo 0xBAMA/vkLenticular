@@ -639,6 +639,9 @@ void PrometheusInstance::initResources () {
 	}
 
 	{ // create the texture to hold the LUT
+		LenticularLUTResolution.width = globalData.gridBaseDim * globalData.gridDivisions;
+		LenticularLUTResolution.height = globalData.gridBaseDim * globalData.gridDivisions;
+		LenticularLUTResolution.depth = 1;
 		LenticularLUT = createImage( LenticularLUTResolution, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT );
 		SetDebugName( VK_OBJECT_TYPE_IMAGE, ( uint64_t ) LenticularLUT.image, "Lenticular LUT" );
 	}
