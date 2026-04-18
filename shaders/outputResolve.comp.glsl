@@ -53,22 +53,12 @@ void main () {
 	vec3 rayDirection = GlobalData.viewBasisZ;
 
 	vec4 color = vec4( 0.0f );
-//	if ( GlobalData.reset != 0 ) {
-//		 handling image reset, here - cancel history and only write this frame's data
-//		color = vec4( 0.0f, 0.0f, 0.0f, 1.0f );
-//	} else
 	if ( Intersect( rayOrigin, rayDirection ) ) {
 		// if the ray hits, we're pathtracing
 		color.xyz = vec3( 1.0f / tMin );
 
 
 
-//		vec4 prevColor = imageLoad( accumulator, idx );
-//		float sampleCount = max( prevColor.a, 0.0f ) + 1.0f;
-//		const float mixFactor = saturate( 1.0f / sampleCount );
-//		color = vec4( mix( prevColor.rgb, color.rgb, mixFactor ), sampleCount );
-//	} else {
-//		color = vec4( 0.0f, 0.0f, 0.0f, 1.0f );
 	}
 
 	imageStore( accumulator, idx, color );
