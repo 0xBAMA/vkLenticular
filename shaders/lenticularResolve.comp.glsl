@@ -49,7 +49,7 @@ void main () {
 
 	vec3 sphereCenter = vec3( 0.0f, 0.0f, -1.5f );
 	vec2 roots = RaySphereIntersect( rayOrigin, rayDirection, sphereCenter, 1.0f );
-	vec3 color = vec3( 0.0f );
+	vec3 color = vec3( 1.0f );
 	if ( roots != vec2( -1.0f ) ) {
 		vec3 p = rayOrigin + rayDirection * roots.x;
 		color = normalize( p - sphereCenter );

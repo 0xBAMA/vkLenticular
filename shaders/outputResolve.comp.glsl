@@ -7,7 +7,7 @@ layout ( local_size_x = 16, local_size_y = 16 ) in;
 
 #include "common.h"
 
-layout ( rgba32f, set = 0, binding = 1 ) uniform image2D lenticularLUT;
+layout ( set = 0, binding = 1 ) uniform sampler2D lenticularLUT;
 layout ( rgba32f, set = 0, binding = 2 ) uniform image2D accumulator;
 
 float tMin, tMax; // global state tracking
@@ -105,10 +105,10 @@ sceneIntersection getSceneIntersection ( in vec3 rayOrigin, in vec3 rayDirection
 				remap( pPlaneHit.z, -panelMaskSize, panelMaskSize, 0, 511 )
 			);
 			vec2 subSample = vec2(
-				remap( dot( vec3( 1.0f, 0.0f, 0.0f ), rayDirection ), -1.0f, 1.0f, 0.0f, 7.0f ),
+				remap( dot( vec3( -1.0f, 0.0f, 0.0f ), rayDirection ), -1.0f, 1.0f, 0.0f, 7.0f ),
 				remap( dot( vec3( 0.0f, 0.0f, 1.0f ), rayDirection ), -1.0f, 1.0f, 0.0f, 7.0f )
 			); // consider doing some linear interpolation over the nearest subpixel samples
-			si.LUTread = imageLoad( lenticularLUT, ivec2( sampleBaseLoc + subSample ) ).xyz;
+			si.LUTread = texture( lenticularLUT, vec2( sampleBaseLoc + subSample ) / 4096.0f ).xyz;
 		}
 	} else {
 		// box hit

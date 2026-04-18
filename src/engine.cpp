@@ -639,7 +639,7 @@ void PrometheusInstance::initResources () {
 	}
 
 	{ // create the texture to hold the LUT
-		LenticularLUT = createImage( LenticularLUTResolution, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_STORAGE_BIT );
+		LenticularLUT = createImage( LenticularLUTResolution, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT );
 		SetDebugName( VK_OBJECT_TYPE_IMAGE, ( uint64_t ) LenticularLUT.image, "Lenticular LUT" );
 	}
 
@@ -751,7 +751,7 @@ void PrometheusInstance::initComputePasses () {
 		{ // descriptor layout
 			DescriptorLayoutBuilder builder;
 			builder.add_binding( 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ); // global config UBO
-			builder.add_binding( 1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE ); // LUT texture
+			builder.add_binding( 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ); // LUT texture
 			builder.add_binding( 2, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE ); // accumulator
 			OutputResolve.descriptorSetLayout = builder.build( device, VK_SHADER_STAGE_COMPUTE_BIT );
 			SetDebugName( VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, ( uint64_t ) OutputResolve.descriptorSetLayout, "Output Resolve Descriptor Set Layout" );
@@ -812,7 +812,8 @@ void PrometheusInstance::initComputePasses () {
 			{
 				DescriptorWriter writer;
 				writer.write_buffer( 0, GlobalUBO.buffer, sizeof( GlobalData ), 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER );
-				writer.write_image( 1, LenticularLUT.imageView, defaultSamplerNearest, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE );
+				// writer.write_image( 1, LenticularLUT.imageView, defaultSamplerLinear, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER );
+				writer.write_image( 1, LenticularLUT.imageView, defaultSamplerNearest, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER );
 				writer.write_image( 2, Accumulator.imageView, defaultSamplerNearest, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE );
 				writer.update_set( device, OutputResolve.descriptorSet );
 			}
