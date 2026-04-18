@@ -337,6 +337,27 @@ void PrometheusInstance::MainLoop () {
 				globalData.viewBasisZ = glm::rotate( globalData.viewBasisZ, amnt, axis );
 				globalData.reset = 1;
 			};
+			static auto RotateXPlane = [ & ] ( float amnt ) {
+				glm::vec3 axis = globalData.planeBasisX;
+				globalData.planeBasisX = glm::rotate( globalData.planeBasisX, amnt, axis );
+				globalData.planeBasisY = glm::rotate( globalData.planeBasisY, amnt, axis );
+				globalData.planeBasisZ = glm::rotate( globalData.planeBasisZ, amnt, axis );
+				globalData.reset = 1;
+			};
+			static auto RotateYPlane = [ & ] ( float amnt ) {
+				glm::vec3 axis = globalData.planeBasisY;
+				globalData.planeBasisX = glm::rotate( globalData.planeBasisX, amnt, axis );
+				globalData.planeBasisY = glm::rotate( globalData.planeBasisY, amnt, axis );
+				globalData.planeBasisZ = glm::rotate( globalData.planeBasisZ, amnt, axis );
+				globalData.reset = 1;
+			};
+			static auto RotateZPlane = [ & ] ( float amnt ) {
+				glm::vec3 axis = globalData.planeBasisZ;
+				globalData.planeBasisX = glm::rotate( globalData.planeBasisX, amnt, axis );
+				globalData.planeBasisY = glm::rotate( globalData.planeBasisY, amnt, axis );
+				globalData.planeBasisZ = glm::rotate( globalData.planeBasisZ, amnt, axis );
+				globalData.reset = 1;
+			};
 
 			constexpr float scaleFactor = 0.965f;
 			if ( !ImGui::GetIO().WantCaptureMouse ) {
@@ -366,6 +387,13 @@ void PrometheusInstance::MainLoop () {
 			if ( kb[ SDL_SCANCODE_D ] || kb[ SDL_SCANCODE_RIGHT ] ) {		RotateY( shift ?  bigStep :  lilStep ); }
 			if ( kb[ SDL_SCANCODE_PAGEUP ] || kb[ SDL_SCANCODE_Q ] ) {		RotateZ( shift ? -bigStep : -lilStep ); }
 			if ( kb[ SDL_SCANCODE_PAGEDOWN ] || kb[ SDL_SCANCODE_E ] ) {	RotateZ( shift ?  bigStep :  lilStep ); }
+
+			if ( kb[ SDL_SCANCODE_U ] ) { RotateXPlane( shift ? bigStep : lilStep ); }
+			if ( kb[ SDL_SCANCODE_I ] ) { RotateXPlane( shift ? -bigStep : -lilStep ); }
+			if ( kb[ SDL_SCANCODE_O ] ) { RotateYPlane( shift ? bigStep : lilStep ); }
+			if ( kb[ SDL_SCANCODE_P ] ) { RotateYPlane( shift ? -bigStep : -lilStep ); }
+			if ( kb[ SDL_SCANCODE_K ] ) { RotateZPlane( shift ? bigStep : lilStep ); }
+			if ( kb[ SDL_SCANCODE_L ] ) { RotateZPlane( shift ? -bigStep : -lilStep ); }
 
 			if ( kb[ SDL_SCANCODE_MINUS ] ) globalData.zoomFactor *= scaleFactor, globalData.reset = 1;
 			if ( kb[ SDL_SCANCODE_EQUALS ] ) globalData.zoomFactor /= scaleFactor, globalData.reset = 1;
@@ -815,8 +843,8 @@ void PrometheusInstance::initComputePasses () {
 			{
 				DescriptorWriter writer;
 				writer.write_buffer( 0, GlobalUBO.buffer, sizeof( GlobalData ), 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER );
-				// writer.write_image( 1, LenticularLUT.imageView, defaultSamplerLinear, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER );
-				writer.write_image( 1, LenticularLUT.imageView, defaultSamplerNearest, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER );
+				writer.write_image( 1, LenticularLUT.imageView, defaultSamplerLinear, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER );
+				// writer.write_image( 1, LenticularLUT.imageView, defaultSamplerNearest, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER );
 				writer.write_image( 2, Accumulator.imageView, defaultSamplerNearest, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE );
 				writer.update_set( device, OutputResolve.descriptorSet );
 			}

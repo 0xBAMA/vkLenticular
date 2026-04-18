@@ -58,8 +58,8 @@ vec3 boxNormal ( vec3 p ) {
 }
 
 float rayPlaneIntersect ( in vec3 rayOrigin, in vec3 rayDirection ) {
-	const vec3 normal = vec3( 0.0f, 1.0f, 0.0f );
-	const vec3 planePt = vec3( 0.0f, 0.0f, -0.95f );
+	const vec3 normal = GlobalData.planeBasisY;
+	const vec3 planePt = vec3( 0.0f, 0.0f, 0.0f );
 	return -( dot( rayOrigin - planePt, normal ) ) / dot( rayDirection, normal );
 }
 
@@ -86,6 +86,7 @@ sceneIntersection getSceneIntersection ( in vec3 rayOrigin, in vec3 rayDirection
 	bool mirrorBoxHit = Intersect( rayOrigin, rayDirection );
 	float planeHit = rayPlaneIntersect( rayOrigin, rayDirection );
 	vec3 pPlaneHit = rayOrigin + planeHit * rayDirection;
+
 	bool planeMask = ( planeHit > 0.0f  // positive distance
 		&& pPlaneHit.x < panelMaskSize && pPlaneHit.x >= -panelMaskSize && pPlaneHit.z < panelMaskSize && pPlaneHit.z >= -panelMaskSize ); // image mask
 
@@ -100,15 +101,20 @@ sceneIntersection getSceneIntersection ( in vec3 rayOrigin, in vec3 rayDirection
 			si.matID = PLANEFRONT;
 
 			// need to sample the LUT -> based on ray direction
-			ivec2 sampleBaseLoc = 8 * ivec2(
-				remap( pPlaneHit.x, -panelMaskSize, panelMaskSize, 0, 511 ),
-				remap( pPlaneHit.z, -panelMaskSize, panelMaskSize, 0, 511 )
+			ivec2 sampleBaseLoc = GlobalData.gridDivisions * ivec2(
+				remap( pPlaneHit.x, -panelMaskSize, panelMaskSize, 0, GlobalData.gridBaseDim - 1 ),
+				remap( pPlaneHit.z, -panelMaskSize, panelMaskSize, 0, GlobalData.gridBaseDim - 1 )
 			);
 			vec2 subSample = vec2(
-				remap( dot( vec3( -1.0f, 0.0f, 0.0f ), rayDirection ), -1.0f, 1.0f, 0.0f, 7.0f ),
-				remap( dot( vec3( 0.0f, 0.0f, 1.0f ), rayDirection ), -1.0f, 1.0f, 0.0f, 7.0f )
+				remap( dot( -GlobalData.planeBasisZ, rayDirection ), -GlobalData.angleScale, GlobalData.angleScale, 0.0f, GlobalData.gridDivisions - 1.0f ),
+				remap( dot( GlobalData.planeBasisX, rayDirection ), -GlobalData.angleScale, GlobalData.angleScale, 0.0f, GlobalData.gridDivisions - 1.0f )
+//				remap( dot( vec3( 0.0f, 0.0f, -1.0f ), rayDirection ), -GlobalData.angleScale, GlobalData.angleScale, 0.0f, GlobalData.gridDivisions - 1.0f ),
+//				remap( dot( vec3( 1.0f, 0.0f, 0.0f ), rayDirection ), -GlobalData.angleScale, GlobalData.angleScale, 0.0f, GlobalData.gridDivisions - 1.0f )
 			); // consider doing some linear interpolation over the nearest subpixel samples
-			si.LUTread = texture( lenticularLUT, vec2( sampleBaseLoc + subSample ) / 4096.0f ).xyz;
+			si.LUTread = vec3( 0.0f );
+			if ( clamp( subSample, vec2( 0.0f ), vec2( GlobalData.gridDivisions - 1.0f ) ) == subSample ) { // out-of-angle is black
+				si.LUTread = texture( lenticularLUT, vec2( sampleBaseLoc + subSample.yx ) / ( GlobalData.gridBaseDim * GlobalData.gridDivisions ) ).xyz;
+			}
 		}
 	} else {
 		// box hit
@@ -140,7 +146,9 @@ void main () {
 
 		// has to be done without the epsilon bump included
 		vec3 normal = boxNormal( pInitial );
-		rayDirection = refract( rayDirection, normal, 1.0f / 1.5f );
+		rayDirection = refract( rayDirection, normal, 1.0f / 1.2f );
+
+		color += 0.05f;
 
 		float transmission = 1.0f;
 		for ( int i = 0; i < 20; i++ ) {
@@ -150,15 +158,14 @@ void main () {
 			// need to keep bouncing till you hit the panel
 			if ( si.matID == MIRRORBOX ) {
 				// reflect, attenuate transmission by wall albedo
-				transmission *= 0.9f;
+				transmission *= 0.75f;
 				rayOrigin = rayOrigin + si.t * rayDirection + 0.001f * si.normal;
 				rayDirection = reflect( rayDirection, si.normal );
 			} else {
-				color.xyz = si.LUTread * transmission;
+				color.xyz += si.LUTread * transmission;
 				break;
 			}
 		}
-		color += 0.05f;
 	}
 
 	imageStore( accumulator, idx, color );
