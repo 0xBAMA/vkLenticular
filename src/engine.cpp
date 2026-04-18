@@ -202,6 +202,30 @@ void PrometheusInstance::Draw () {
 	vkutil::transition_image( cmd, Accumulator.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL );
 	vkutil::transition_image( cmd, drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL );
 
+	if ( globalData.reset != 0 ) {
+		globalData.reset = 0;
+
+		// clearing the grid can just be clears
+		VkImageSubresourceRange range = {
+			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+			.baseMipLevel = 0,
+			.levelCount = VK_REMAINING_MIP_LEVELS,
+			.baseArrayLayer = 0,
+			.layerCount = VK_REMAINING_ARRAY_LAYERS
+		};
+		VkClearColorValue clearColor{ 0.0f, 0.0f, 0.0f, 0.0f };
+		vkCmdClearColorImage( cmd, Accumulator.image, VK_IMAGE_LAYOUT_GENERAL, &clearColor, 1, &range );
+		VkImageMemoryBarrier2 barriers[ 1 ] = {
+			makeImageBarrier( Accumulator.image, VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT, VK_ACCESS_2_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT )
+		};
+		VkDependencyInfo barrierDependency {
+			.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+			.imageMemoryBarrierCount = 1,
+			.pImageMemoryBarriers = barriers
+		};
+		vkCmdPipelineBarrier2( cmd, &barrierDependency );
+	}
+
 	// invoke the render process
 	LenticularResolve.invoke( cmd );
 	OutputResolve.invoke( cmd );
