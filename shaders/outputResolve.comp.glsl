@@ -57,6 +57,12 @@ vec3 boxNormal ( vec3 p ) {
 	}
 }
 
+float rayPlaneIntersect ( in vec3 rayOrigin, in vec3 rayDirection ) {
+	const vec3 normal = vec3( 0.0f, 1.0f, 0.0f );
+	const vec3 planePt = vec3( 0.0f, 0.0f, 0.0f ); // not sure how far down this should be
+	return -( dot( rayOrigin - planePt, normal ) ) / dot( rayDirection, normal );
+}
+
 void main () {
 	ivec2 idx = ivec2(gl_GlobalInvocationID.xy);
 
@@ -75,10 +81,16 @@ void main () {
 		rayOrigin = pInitial + rayDirection * 0.0001f;
 
 		vec3 normal = boxNormal( pInitial );
-		rayDirection = refract( rayDirection, normal, 1.5f );
+		rayDirection = refract( rayDirection, normal, 1.0f / 1.5f );
 
-		float transmission = 1.0f;
-		for ( int i = 0; i < 4; i++ ) {
+		float dPlane = rayPlaneIntersect( rayOrigin, rayDirection );
+		vec3 pHit = rayOrigin + rayDirection * dPlane;
+		if ( dPlane > 0.0f && pHit.x < 0.5f && pHit.x >= -0.5f && pHit.z < 0.5f && pHit.z >= -0.5f ) {
+			color.xyz = vec3( pHit );
+		}
+
+//		float transmission = 1.0f;
+//		for ( int i = 0; i < 4; i++ ) {
 
 			// scene intersection - in the box, rays can't escape...
 				// Hit one of three things first:
@@ -106,7 +118,7 @@ void main () {
 
 				// epsilon bump + rayOrigin update
 
-		}
+//		}
 	}
 
 	imageStore( accumulator, idx, color );

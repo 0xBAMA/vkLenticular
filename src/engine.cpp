@@ -351,7 +351,7 @@ void PrometheusInstance::MainLoop () {
 				}
 				ImVec2 valueRaw = ImGui::GetMouseDragDelta( 0, 0.0f );
 				if ( ( valueRaw.x != 0 || valueRaw.y != 0 ) ) {
-					RotateY( valueRaw.x * 0.03f );
+					RotateY( -valueRaw.x * 0.03f );
 					RotateX( valueRaw.y * 0.03f );
 					ImGui::ResetMouseDragDelta( 0 );
 				}
