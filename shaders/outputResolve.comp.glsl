@@ -63,11 +63,68 @@ float rayPlaneIntersect ( in vec3 rayOrigin, in vec3 rayDirection ) {
 	return -( dot( rayOrigin - planePt, normal ) ) / dot( rayDirection, normal );
 }
 
-void main () {
-	ivec2 idx = ivec2(gl_GlobalInvocationID.xy);
+#define MIRRORBOX 0
+#define PLANEFRONT 1
+#define PLANEBACK 2
+struct sceneIntersection {
+	float t;		// distance to hit
+	vec3 normal;	// normal vector for the hit surface
+	int matID;		// identifying which surface is hit
+	vec3 LUTread;	// if the matID is PLANEFRONT, this is the lenticular color data
+};
 
-	vec2 uv = (2.0f * (vec2(idx) + vec2(0.5f)) / vec2(imageSize(accumulator).xy)) - vec2(1.0f);
-	uv.x *= float(imageSize(accumulator).x) / float(imageSize(accumulator).y);
+sceneIntersection getSceneIntersection ( in vec3 rayOrigin, in vec3 rayDirection ) {
+	sceneIntersection si;
+
+	// Hit one of three things first:
+		// the inside of the mirror box			-> you need to continue
+		// the lenticular panel (light side)	-> you have a color
+		// the lenticular panel (dark side)		-> ray dies
+
+	const float panelMaskSize = 0.95f;
+
+	bool mirrorBoxHit = Intersect( rayOrigin, rayDirection );
+	float planeHit = rayPlaneIntersect( rayOrigin, rayDirection );
+	vec3 pPlaneHit = rayOrigin + planeHit * rayDirection;
+	bool planeMask = ( planeHit > 0.0f  // positive distance
+		&& pPlaneHit.x < panelMaskSize && pPlaneHit.x >= -panelMaskSize && pPlaneHit.z < panelMaskSize && pPlaneHit.z >= -panelMaskSize ); // image mask
+
+	if ( planeHit < tMax && planeMask ) {
+		// we hit the plane before the box -> normal unimportant, as the ray dies now
+		if ( dot( rayDirection, vec3( 0.0f, 1.0f, 0.0f ) ) > 0.0f ) {
+			// dark side
+			si.matID = PLANEBACK;
+		} else {
+			// front side of plane -> need to find the color from the LUT
+			si.matID = PLANEFRONT;
+
+			// need to sample the LUT -> based on ray direction
+			ivec2 sampleBaseLoc = 8 * ivec2(
+				remap( pPlaneHit.x, -panelMaskSize, panelMaskSize, 0, 511 ),
+				remap( pPlaneHit.z, -panelMaskSize, panelMaskSize, 0, 511 )
+			);
+			vec2 subSample = vec2(
+				remap( dot( vec3( 1.0f, 0.0f, 0.0f ), rayDirection ), -1.0f, 1.0f, 0.0f, 7.0f ),
+				remap( dot( vec3( 0.0f, 0.0f, 1.0f ), rayDirection ), -1.0f, 1.0f, 0.0f, 7.0f )
+			); // consider doing some linear interpolation over the nearest subpixel samples
+			si.LUTread = imageLoad( lenticularLUT, ivec2( sampleBaseLoc + subSample ) ).xyz;
+		}
+	} else {
+		// box hit
+		si.t = tMax;
+		si.matID = MIRRORBOX;
+		si.normal = -boxNormal( rayOrigin + rayDirection * tMax );
+	}
+
+	return si;
+}
+
+
+void main () {
+	ivec2 idx = ivec2( gl_GlobalInvocationID.xy );
+
+	vec2 uv = ( 2.0f * ( vec2( idx ) + vec2( 0.5f ) ) / vec2( imageSize( accumulator ).xy ) ) - vec2( 1.0f );
+	uv.x *= float( imageSize( accumulator ).x ) / float( imageSize( accumulator ).y );
 
 	// create a view ray
 	vec3 rayOrigin = GlobalData.zoomFactor * (uv.x * GlobalData.viewBasisX + uv.y * GlobalData.viewBasisY) - 10.0f * GlobalData.viewBasisZ;
@@ -80,23 +137,24 @@ void main () {
 		vec3 pInitial = rayOrigin + rayDirection * tMin;
 		rayOrigin = pInitial + rayDirection * 0.0001f;
 
+		// has to be done without the epsilon bump included
 		vec3 normal = boxNormal( pInitial );
 		rayDirection = refract( rayDirection, normal, 1.0f / 1.5f );
 
-		float dPlane = rayPlaneIntersect( rayOrigin, rayDirection );
-		vec3 pHit = rayOrigin + rayDirection * dPlane;
-		if ( dPlane > 0.0f && pHit.x < 0.5f && pHit.x >= -0.5f && pHit.z < 0.5f && pHit.z >= -0.5f ) {
-			color.xyz = vec3( pHit );
+//		float dPlane = rayPlaneIntersect( rayOrigin, rayDirection );
+		sceneIntersection si = getSceneIntersection( rayOrigin, rayDirection );
+		if ( si.matID == PLANEFRONT ) {
+			color.xyz = si.LUTread;
 		}
+//		vec3 pHit = rayOrigin + rayDirection * dPlane;
+//		if ( dPlane > 0.0f && pHit.x < 0.95f && pHit.x >= -0.95f && pHit.z < 0.95f && pHit.z >= -0.95f ) {
+//			color.xyz = vec3( pHit );
+//		}
 
 //		float transmission = 1.0f;
 //		for ( int i = 0; i < 4; i++ ) {
-
 			// scene intersection - in the box, rays can't escape...
-				// Hit one of three things first:
-					// the mirror box
-					// the lenticular panel (light side)
-					// the lenticular panel (dark side)
+		//			sceneIntersection si = getSceneIntersection( rayOrigin, rayDirection );
 
 			// if you hit the panel - you have a color, or you hit the dark side
 

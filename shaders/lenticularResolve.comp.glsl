@@ -47,8 +47,8 @@ void main () {
 	);
 	vec3 rayDirection = Rotate3D( startAngle.x, vec3( 0.0f, 1.0f, 0.0f ) ) * Rotate3D( startAngle.y, vec3( 1.0f, 0.0f, 0.0f ) ) * vec3( 0.0f, 0.0f, -1.0f );
 
-	vec3 sphereCenter = vec3( 0.0f, 0.0f, -3.0f );
-	vec2 roots = RaySphereIntersect( rayOrigin, rayDirection, sphereCenter, 2.0f );
+	vec3 sphereCenter = vec3( 0.0f, 0.0f, -1.5f );
+	vec2 roots = RaySphereIntersect( rayOrigin, rayDirection, sphereCenter, 1.0f );
 	vec3 color = vec3( 0.0f );
 	if ( roots != vec2( -1.0f ) ) {
 		vec3 p = rayOrigin + rayDirection * roots.x;
