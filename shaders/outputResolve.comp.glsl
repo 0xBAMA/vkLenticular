@@ -59,7 +59,7 @@ vec3 boxNormal ( vec3 p ) {
 
 float rayPlaneIntersect ( in vec3 rayOrigin, in vec3 rayDirection ) {
 	const vec3 normal = vec3( 0.0f, 1.0f, 0.0f );
-	const vec3 planePt = vec3( 0.0f, 0.0f, 0.0f ); // not sure how far down this should be
+	const vec3 planePt = vec3( 0.0f, 0.0f, -0.95f );
 	return -( dot( rayOrigin - planePt, normal ) ) / dot( rayDirection, normal );
 }
 
@@ -81,7 +81,7 @@ sceneIntersection getSceneIntersection ( in vec3 rayOrigin, in vec3 rayDirection
 		// the lenticular panel (light side)	-> you have a color
 		// the lenticular panel (dark side)		-> ray dies
 
-	const float panelMaskSize = 0.95f;
+	const float panelMaskSize = 0.75f;
 
 	bool mirrorBoxHit = Intersect( rayOrigin, rayDirection );
 	float planeHit = rayPlaneIntersect( rayOrigin, rayDirection );
@@ -94,6 +94,7 @@ sceneIntersection getSceneIntersection ( in vec3 rayOrigin, in vec3 rayDirection
 		if ( dot( rayDirection, vec3( 0.0f, 1.0f, 0.0f ) ) > 0.0f ) {
 			// dark side
 			si.matID = PLANEBACK;
+			si.LUTread = vec3( 0.0f );
 		} else {
 			// front side of plane -> need to find the color from the LUT
 			si.matID = PLANEFRONT;
@@ -141,42 +142,23 @@ void main () {
 		vec3 normal = boxNormal( pInitial );
 		rayDirection = refract( rayDirection, normal, 1.0f / 1.5f );
 
-//		float dPlane = rayPlaneIntersect( rayOrigin, rayDirection );
-		sceneIntersection si = getSceneIntersection( rayOrigin, rayDirection );
-		if ( si.matID == PLANEFRONT ) {
-			color.xyz = si.LUTread;
-		}
-//		vec3 pHit = rayOrigin + rayDirection * dPlane;
-//		if ( dPlane > 0.0f && pHit.x < 0.95f && pHit.x >= -0.95f && pHit.z < 0.95f && pHit.z >= -0.95f ) {
-//			color.xyz = vec3( pHit );
-//		}
-
-//		float transmission = 1.0f;
-//		for ( int i = 0; i < 4; i++ ) {
+		float transmission = 1.0f;
+		for ( int i = 0; i < 20; i++ ) {
 			// scene intersection - in the box, rays can't escape...
-		//			sceneIntersection si = getSceneIntersection( rayOrigin, rayDirection );
+			sceneIntersection si = getSceneIntersection( rayOrigin, rayDirection );
 
-			// if you hit the panel - you have a color, or you hit the dark side
-
-				// if you hit the dark side, the ray dies, we take color as 0
-
-				// else get the value out of the lenticular LUT
-					// pixel select
-						// plane X, Y -> spatial mapping
-					// subpixel select
-						// plane X, Y, ray direction -> directional mapping
-
-				// color is transmission * sampled color
-
-			// else need to keep bouncing
-
-				// attenuate transmission by wall albedo
-
-				// get the normal at the hit point - this happens *at* the hit point, before epsilon bump is considered
-
-				// epsilon bump + rayOrigin update
-
-//		}
+			// need to keep bouncing till you hit the panel
+			if ( si.matID == MIRRORBOX ) {
+				// reflect, attenuate transmission by wall albedo
+				transmission *= 0.9f;
+				rayOrigin = rayOrigin + si.t * rayDirection + 0.001f * si.normal;
+				rayDirection = reflect( rayDirection, si.normal );
+			} else {
+				color.xyz = si.LUTread * transmission;
+				break;
+			}
+		}
+		color += 0.05f;
 	}
 
 	imageStore( accumulator, idx, color );

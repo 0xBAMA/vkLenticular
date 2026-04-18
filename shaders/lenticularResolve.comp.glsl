@@ -52,7 +52,6 @@ void main () {
 	vec3 color = vec3( 0.0f );
 	if ( roots != vec2( -1.0f ) ) {
 		vec3 p = rayOrigin + rayDirection * roots.x;
-		// color = abs( p - sphereCenter );
 		color = normalize( p - sphereCenter );
 	}
 
