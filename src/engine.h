@@ -73,6 +73,10 @@ struct GlobalData {
 	int gridDivisions = 64;
 
 	float angleScale = 1.0f;
+
+	float panelMaskSize = 0.75f;
+
+	int linearFilter = 0;
 };
 
 // smallest scope CPU->GPU passing of information

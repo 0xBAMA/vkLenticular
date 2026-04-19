@@ -417,6 +417,23 @@ void PrometheusInstance::MainLoop () {
 			// ImGui::ShowDemoWindow();
 
 			if ( ImGui::Begin( "Controls" ) ) {
+				ImGui::Checkbox( "Linear Filter", ( bool * ) &globalData.linearFilter );
+
+				ImGui::SliderFloat( "Zoom", &globalData.zoomFactor, 0.0f, 10.0f );
+				ImGui::SliderFloat( "Plane Size", &globalData.panelMaskSize, 0.1f, 1.0f );
+				ImGui::SliderFloat( "Angle Scalar", &globalData.angleScale, 0.0f, 1.0f );
+
+				// show view orientation
+				ImGui::Text( "View Orientation" );
+				ImGui::Text( ( glm::to_string( globalData.viewBasisX ) ).c_str() );
+				ImGui::Text( ( glm::to_string( globalData.viewBasisY ) ).c_str() );
+				ImGui::Text( ( glm::to_string( globalData.viewBasisZ ) ).c_str() );
+
+				// show plane orientation
+				ImGui::Text( "Plane Orientation" );
+				ImGui::Text( ( glm::to_string( globalData.planeBasisX ) ).c_str() );
+				ImGui::Text( ( glm::to_string( globalData.planeBasisY ) ).c_str() );
+				ImGui::Text( ( glm::to_string( globalData.planeBasisZ ) ).c_str() );
 
 			}
 			ImGui::End();
