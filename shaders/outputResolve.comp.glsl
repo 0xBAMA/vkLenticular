@@ -63,6 +63,50 @@ float rayPlaneIntersect ( in vec3 rayOrigin, in vec3 rayDirection ) {
 	return -( dot( rayOrigin - planePt, normal ) ) / dot( rayDirection, normal );
 }
 
+vec3 colorSampleSingle ( in vec3 rayDirection, in ivec2 planePointPixelSpace ) {
+	ivec2 sampleBaseLoc = GlobalData.gridDivisions * planePointPixelSpace;
+	vec2 subSample = vec2(
+		remap( dot( -GlobalData.planeBasisZ, rayDirection ), -GlobalData.angleScale, GlobalData.angleScale, 0.0f, GlobalData.gridDivisions - 1.0f ),
+		remap( dot( GlobalData.planeBasisX, rayDirection ), -GlobalData.angleScale, GlobalData.angleScale, 0.0f, GlobalData.gridDivisions - 1.0f )
+	); // consider doing some linear interpolation over the nearest subpixel samples
+	vec3 LUTread = vec3( 0.0f );
+	if ( clamp( subSample, vec2( 0.0f ), vec2( GlobalData.gridDivisions - 1.0f ) ) == subSample ) { // out-of-angle is black
+		LUTread = texture( lenticularLUT, vec2( sampleBaseLoc + subSample.yx ) / ( GlobalData.gridBaseDim * GlobalData.gridDivisions ) ).xyz;
+	}
+	return LUTread;
+}
+
+vec3 colorSample ( in vec3 rayDirection, in vec2 planePoint ) {
+	vec2 planePointPixelSpace = vec2(
+		remap( planePoint.x, -GlobalData.panelMaskSize, GlobalData.panelMaskSize, 0, GlobalData.gridBaseDim - 1 ),
+		remap( planePoint.y, -GlobalData.panelMaskSize, GlobalData.panelMaskSize, 0, GlobalData.gridBaseDim - 1 )
+	);
+	if ( GlobalData.linearFilter != 0 ) {
+		// need to do the linear interpolation math
+		// figure out the fractional pixel location
+		const vec2 floorCoord = clamp( floor( planePointPixelSpace - 0.5f ), ivec2( 0 ), ivec2( GlobalData.gridBaseDim - 1 ) );
+		const vec2 fractCoord = fract( planePointPixelSpace - 0.5f );
+
+		// figure out the four nearest samples
+		vec3 samples[] = vec3[ 4 ] (
+			colorSampleSingle( rayDirection, ivec2( floorCoord.x, floorCoord.y ) ),
+			colorSampleSingle( rayDirection, ivec2( floorCoord.x + 1, floorCoord.y ) ),
+			colorSampleSingle( rayDirection, ivec2( floorCoord.x, floorCoord.y + 1 ) ),
+			colorSampleSingle( rayDirection, ivec2( floorCoord.x + 1, floorCoord.y + 1 ) )
+		);
+
+		// figure out the output, based on mixing them
+			// horizontal interpolation first
+		vec3 value1 = mix( samples[ 0 ], samples[ 1 ], fractCoord.x );
+		vec3 value2 = mix( samples[ 2 ], samples[ 3 ], fractCoord.x );
+
+		// then the vertical interpolation between those samples
+		return mix( value1, value2, fractCoord.yyy );
+	} else {
+		return colorSampleSingle( rayDirection, ivec2( planePointPixelSpace ) );
+	}
+}
+
 #define MIRRORBOX 0
 #define PLANEFRONT 1
 #define PLANEBACK 2
@@ -81,7 +125,6 @@ sceneIntersection getSceneIntersection ( in vec3 rayOrigin, in vec3 rayDirection
 		// the lenticular panel (light side)	-> you have a color
 		// the lenticular panel (dark side)		-> ray dies
 
-	const float panelMaskSize = 0.75f;
 
 	bool mirrorBoxHit = Intersect( rayOrigin, rayDirection );
 	float planeHit = rayPlaneIntersect( rayOrigin, rayDirection );
@@ -93,7 +136,7 @@ sceneIntersection getSceneIntersection ( in vec3 rayOrigin, in vec3 rayDirection
 	);
 
 	bool planeMask = ( planeHit > 0.0f  // positive distance
-		&& projPt.x < panelMaskSize && projPt.x >= -panelMaskSize && projPt.y < panelMaskSize && projPt.y >= -panelMaskSize ); // image mask
+		&& projPt.x < GlobalData.panelMaskSize && projPt.x >= -GlobalData.panelMaskSize && projPt.y < GlobalData.panelMaskSize && projPt.y >= -GlobalData.panelMaskSize ); // image mask
 
 	if ( planeHit < tMax && planeMask ) {
 		// we hit the plane before the box -> normal unimportant, as the ray dies now
@@ -106,18 +149,7 @@ sceneIntersection getSceneIntersection ( in vec3 rayOrigin, in vec3 rayDirection
 			si.matID = PLANEFRONT;
 
 			// need to sample the LUT -> based on ray direction
-			ivec2 sampleBaseLoc = GlobalData.gridDivisions * ivec2(
-				remap( projPt.x, -panelMaskSize, panelMaskSize, 0, GlobalData.gridBaseDim - 1 ),
-				remap( projPt.y, -panelMaskSize, panelMaskSize, 0, GlobalData.gridBaseDim - 1 )
-			);
-			vec2 subSample = vec2(
-				remap( dot( -GlobalData.planeBasisZ, rayDirection ), -GlobalData.angleScale, GlobalData.angleScale, 0.0f, GlobalData.gridDivisions - 1.0f ),
-				remap( dot( GlobalData.planeBasisX, rayDirection ), -GlobalData.angleScale, GlobalData.angleScale, 0.0f, GlobalData.gridDivisions - 1.0f )
-			); // consider doing some linear interpolation over the nearest subpixel samples
-			si.LUTread = vec3( 0.0f );
-			if ( clamp( subSample, vec2( 0.0f ), vec2( GlobalData.gridDivisions - 1.0f ) ) == subSample ) { // out-of-angle is black
-				si.LUTread = texture( lenticularLUT, vec2( sampleBaseLoc + subSample.yx ) / ( GlobalData.gridBaseDim * GlobalData.gridDivisions ) ).xyz;
-			}
+			si.LUTread = colorSample( rayDirection, projPt );
 		}
 	} else {
 		// box hit

@@ -37,8 +37,11 @@ layout( set = 0, binding = 0, scalar ) uniform globalData {
 	int gridDivisions;
 
 	float angleScale;
+	float panelMaskSize;
 
-	// nsight layout: vec2u; vec2u; vec3; int; int; float; float; vec3; vec3; vec3; vec3; vec3; vec3; float; int; int; float;
+	int linearFilter;
+
+	// nsight layout: vec2u; vec2u; vec3; int; int; float; float; vec3; vec3; vec3; vec3; vec3; vec3; float; int; int; float; float; int;
 } GlobalData;
 //=========================================================
 
