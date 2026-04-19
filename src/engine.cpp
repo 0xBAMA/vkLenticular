@@ -227,7 +227,11 @@ void PrometheusInstance::Draw () {
 	}
 
 	// invoke the render process
-	LenticularResolve.invoke( cmd );
+	static bool firstTime = true;
+	if ( firstTime ) {
+		firstTime = false;
+		LenticularResolve.invoke( cmd );
+	}
 	OutputResolve.invoke( cmd );
 
 	// compute shader to accumulate the raster result + put the resolved final image into the drawImage...
