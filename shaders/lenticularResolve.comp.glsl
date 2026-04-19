@@ -9,6 +9,7 @@ layout ( rgba8, set = 0, binding = 1 ) uniform image2D lenticularLUT;
 
 #include "common.h"
 #include "hg_sdf.h"
+#include "random.h"
 
 vec2 RaySphereIntersect ( vec3 r0, vec3 rd, vec3 s0, float sr ) {
 	// r0 is ray origin
@@ -74,29 +75,41 @@ vec3 SDFNormal ( in vec3 position ) {
 
 void main () {
 	ivec2 idx = ivec2( gl_GlobalInvocationID.xy );
+	seed = PushConstants.wangSeed + idx.x * 69420 + idx.y * 8675309;
 
 	// we need to figure out what pixel this invocation corresponds to -> informs ray origin
 	ivec2 pixelIdx = idx / GlobalData.gridDivisions;
 	vec3 rayOrigin = vec3(
-		remap( float( pixelIdx.x + 0.5f ), 0.0f, GlobalData.gridBaseDim, -1.0f, 1.0f ),
-		remap( float( pixelIdx.y + 0.5f ), 0.0f, GlobalData.gridBaseDim, -1.0f, 1.0f ),
+		remap( float( pixelIdx.x + 0.5f ), 0.0f, GlobalData.gridBaseDim - 1, -1.0f, 1.0f ),
+		remap( float( pixelIdx.y + 0.5f ), 0.0f, GlobalData.gridBaseDim - 1, -1.0f, 1.0f ),
 		0.0f
 	);
 
 	// we need to figure out what angle this invocation corresponds to -> informs ray direction
 	ivec2 subpixelIdx = idx % GlobalData.gridDivisions;
 	vec2 startAngle = vec2( // this is used to construct the vector, via rotations from a vector pointing downwards...
-		remap( float( subpixelIdx.x ), 0.0f, GlobalData.gridDivisions, piHalf * GlobalData.angleScale, -piHalf * GlobalData.angleScale ),
-		remap( float( subpixelIdx.y ), 0.0f, GlobalData.gridDivisions, piHalf * GlobalData.angleScale, -piHalf * GlobalData.angleScale )
+		remap( float( subpixelIdx.x ), 0.0f, GlobalData.gridDivisions - 1, piHalf * GlobalData.angleScale, -piHalf * GlobalData.angleScale ),
+		remap( float( subpixelIdx.y ), 0.0f, GlobalData.gridDivisions - 1, piHalf * GlobalData.angleScale, -piHalf * GlobalData.angleScale )
 	);
 	vec3 rayDirection = Rotate3D( startAngle.x, vec3( 0.0f, 1.0f, 0.0f ) ) * Rotate3D( startAngle.y, vec3( 1.0f, 0.0f, 0.0f ) ) * vec3( 0.0f, 0.0f, -1.0f );
 
-	vec3 sphereCenter = vec3( 0.0f, 0.0f, -1.5f );
-	vec2 roots = RaySphereIntersect( rayOrigin, rayDirection, sphereCenter, 1.0f );
 	vec3 color = vec3( 1.0f );
-	if ( roots != vec2( -1.0f ) ) {
-		vec3 p = rayOrigin + rayDirection * roots.x;
-		color = normalize( p - sphereCenter ) * step( mod( p.z, 0.2f ), 0.1f );
+
+#if 1
+	vec3 sphereCenter = vec3( 0.0f, 0.0f, -1.125f );
+	int numSamples = 8;
+	vec3 c = vec3( 0.0f );
+	for ( int i = 0; i < numSamples; i++ ) {
+		vec2 roots = RaySphereIntersect( rayOrigin + vec3( NormalizedRandomFloat() - 0.5f, NormalizedRandomFloat() - 0.5f, 0.0f ) * ( 2.0f / GlobalData.gridBaseDim ), rayDirection, sphereCenter, 1.0f );
+		if ( roots != vec2( -1.0f ) ) {
+			vec3 p = rayOrigin + rayDirection * roots.x;
+			c += normalize( p - sphereCenter ) * step( mod( p.z, 0.2f ), 0.1f );
+		} else {
+			c += 1.0f;
+		}
+	}
+	color = c / float( numSamples );
+#else
 	float dRaymarch = raymarch( rayOrigin + vec3( 0.0f, 0.0f, 0.75f ), rayDirection );
 	if ( didHit ) {
 		const vec3 normal = SDFNormal( rayOrigin + dRaymarch * rayDirection );
@@ -115,6 +128,7 @@ void main () {
 			color *= saturate( dot( vLightNorm, normal ) );
 		}
 	}
+#endif
 
 	// we need to store back the result, into the lenticular LUT
 	imageStore( lenticularLUT, idx, vec4( color, 1.0f ) );

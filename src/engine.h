@@ -69,10 +69,10 @@ struct GlobalData {
 	// zooming in and out
 	float zoomFactor{ 3.0f };
 
-	int gridBaseDim = 128;
+	int gridBaseDim = 64;
 	int gridDivisions = 64;
 
-	float angleScale = 0.25f;
+	float angleScale = 1.0f;
 };
 
 // smallest scope CPU->GPU passing of information
